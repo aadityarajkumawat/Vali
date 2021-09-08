@@ -4,18 +4,32 @@ const express = require('express')
 const sgMail = require('@sendgrid/mail')
 
 const app = express()
+app.set('view engine', 'ejs')
+app.use(express.urlencoded({ extended: false }))
+app.use(express.static(__dirname + '/../public'))
 
 sgMail.setApiKey(process.env.SEND_GRID_API)
 
 const { Client, Intents } = require('discord.js')
 
+/**
+ * { 8475698436534454: {id: 8475698436534454, otp: '235422'} }
+ */
 const ids = {}
 
-async function sendMail(to, content) {
+const SUCCESS = 202
+
+/**
+ * @param {string} to E-Mail address to which mail should be sent
+ * @param {string} content HTML string of content
+ * @param {string} from Sender's E-Mail address
+ * @returns sent
+ */
+async function sendMail(to, content, from = 'arkumawat78@gmail.com') {
     let sent = false
     const msg = {
         to,
-        from: 'arkumawat78@gmail.com',
+        from,
         subject: 'Verification for JKLU discord server',
         text: 'Join the best discord server ever',
         html: content,
@@ -23,9 +37,9 @@ async function sendMail(to, content) {
 
     try {
         const mail = await sgMail.send(msg, false)
-        sent = mail[0].statusCode === 202
-    } catch (error) {
-        console.log(error.message)
+        sent = mail[0].statusCode === SUCCESS
+    } catch {
+        sent = false
     }
 
     return sent
@@ -36,6 +50,29 @@ async function sendDM(userId, message, force = true) {
         force,
     })
     await user.send(message)
+}
+
+/**
+ * A function which checks if the input email,
+ * is a JKLU Email addess or not
+ * @param {string} email
+ */
+function isJKLUEmail(email) {
+    let idx = email.indexOf('@')
+    return email.substr(idx, email.length) === '@jklu.edu.in'
+}
+
+/**
+ * @param {Array<any>} container
+ */
+function dataIterator(container) {
+    let idx = -1
+    return next
+
+    function next() {
+        idx = idx + 1
+        return container[idx]
+    }
 }
 
 let client = new Client({
@@ -55,150 +92,103 @@ client.on('ready', function () {
 
 client.on('guildMemberAdd', (member) => {
     console.log(
-        `New User "${member.user.username}" has joined "${member.guild.name}"`,
+        `New user "${member.user.username}" has joined "${member.guild.name}"`,
     )
-    console.log(member.user.email)
+    let userId = member.user.id
+    ids[userId] = { userId, OTP: '' }
+    let url = `http://localhost:4000/verify/${userId}`
+    sendDM(userId, `Please verify your account at ${url}`)
 })
 
 client.on('guildMemberRemove', (member) => {
     console.log(
-        `New User "${member.user.username}" has left "${member.guild.name}"`,
+        `New user "${member.user.username}" has left "${member.guild.name}"`,
     )
 })
 
 client.on('guildMemberUpdate', (member) => {
-    console.log(
-        `New User "${member.user.username}" has again "${member.guild.name}"`,
-    )
+    console.log(`New user "${member.user.username}" has been modified"`)
 })
 
-client.on('messageCreate', function (message) {
-    console.log(`[${message.author.tag}]: ${message.content}`)
-    let msg = message.content
+app.get('/', (_, res) => {
+    res.render('pages/notfound', {})
+})
 
-    if (message.content === 'delete') {
+app.get('/verify/:id/:error?', (req, res) => {
+    let userId = req.params.id
+    let error = req.params.error
+    if (userId in ids) {
+        res.render('pages/index', { path: `/auth/${userId}`, warning: '' })
+    } else if (error === 'true') {
+        res.render('pages/index', {
+            path: `/auth/${userId}`,
+            warning: 'Enter JKLU E-Mail address only',
+        })
+    } else {
+        res.render('pages/notfound')
+    }
+})
+
+app.post('/auth/:id', (req, res) => {
+    let userId = req.params.id
+    let OTP = Math.random().toString().substr(2, 6)
+    if (userId in ids) {
+        ids[userId].OTP = OTP
+    }
+    let email = req.body.email
+    if (userId in ids && isJKLUEmail(email)) {
         ;(async () => {
-            let fetched = await message.channel.awaitMessages({ max: 5 })
-            console.log('fetched', fetched)
+            await sendMail(
+                email,
+                `
+                <h1>${OTP}</h1>
+                `,
+            )
         })()
-    } else if (msg === 'mailme') {
-        const msg = {
-            to: 'aaditya01work@gmail.com',
-            from: 'arkumawat78@gmail.com',
-            subject: 'Verification for JKLU discord server',
-            text: 'and easy to do anywhere, even with Node.js',
-            html: fs.readFileSync('./src/mail.html', { encoding: 'utf-8' }),
-        }
-
-        sgMail
-            .send(msg)
-            .then(() => {
-                console.log('Email sent')
-            })
-            .catch((error) => {
-                console.error(error, error.message)
-            })
-    } else if (msg.includes('<spem:')) {
-        let idx = message.content.indexOf('<')
-        let num = message.content.substr(idx + 6, message.content.length - 1)
-        num = parseInt(num)
-        let dataStream = []
-        for (let i = 0; i < num; i++) {
-            dataStream.push(message.reply(message.content.substr(0, idx)))
-        }
-        ;async () => {
-            await Promise.all(dataStream)
-        }
-    } else if (message.content.toLowerCase() === 'hi') {
-        message.reply('Hi, how are you?')
-        console.log(message.author.id)
-    } else if (message.content === 'iamcharsi') {
-        message.reply('Once a charsi, always charsi')
-    } else if (msg === 'message_me') {
-        sendDM(message.author.id, 'Hope, you are having a good day!')
+        res.redirect(`/complete/${userId}`)
+    } else {
+        res.render('pages/index', {
+            path: `/auth/${userId}`,
+            warning: 'Enter JKLU E-Mail address only',
+        })
     }
-    // !!add adityakumawat@jkluedu.in
-    // 884443569056800870
-    let args = msg.split(' ')
-    if (args[0] === 'addme') {
-        async function runner() {
+})
+
+app.get('/complete/:id', (req, res) => {
+    let userId = req.params.id
+    if (userId in ids) {
+        res.render('pages/otp', { path: `/give-role/${userId}` })
+    } else {
+        res.render('pages/notfound')
+    }
+})
+
+app.post('/give-role/:id', (req, res) => {
+    let userId = req.params.id
+    let inputOTP = ''
+    for (let key of Object.keys(req.body)) {
+        inputOTP = inputOTP.concat(req.body[key])
+    }
+    if (userId in ids && inputOTP === ids[userId].OTP) {
+        async function assignRole(serverName, role) {
+            let guild = client.guilds.cache.find(
+                (guild) => guild.name === serverName,
+            )
             try {
-                let valiPowers = message.guild.roles.cache.find(
-                    (r) => r.name === 'Auth',
-                )
-                let member = message.mentions.members.first()
-                let role = message.mentions.roles.first()
-
-                let res = await message.member.roles.add(valiPowers)
-                console.log(res)
-            } catch (error) {
-                console.log(error.message)
+                let valiPowers = guild.roles.cache.find((r) => r.name === role)
+                let user = await guild.members.fetch(userId)
+                await user.roles.add(valiPowers)
+                sendDM(userId, 'You have been assigned Student role')
+            } catch {
+                sendDM(userId, 'Oops! An error occured')
             }
         }
-
-        runner()
+        assignRole('uckers server', 'Student')
+        delete ids[userId]
+        res.render('pages/success')
+    } else {
+        res.render('pages/notfound')
     }
-    if (args[0] === '!!add') {
-        async function runner() {
-            let email = args[1]
-            let idx = email.indexOf('@')
-            let isJKLUEmail = email.substr(idx, email.length) === '@jklu.edu.in'
-            isJKLUEmail = true
-            let sent = false
-
-            if (isJKLUEmail) {
-                sent = sendMail(
-                    email,
-                    fs.readFileSync('./src/mail.html', { encoding: 'utf-8' }),
-                )
-
-                if (sent) {
-                    await message.reply(
-                        'Verification Email has been sent please check your inbox and verify your account',
-                    )
-                    let userId = message.author.id
-                    await sendDM(
-                        userId,
-                        'Please check your JKLU E-Mail inbox and junk for a verification an email',
-                    )
-                }
-            } else {
-                await message.reply('Please enter your JKLU Email only')
-            }
-        }
-        runner().catch((e) => console.log(e.message))
-    }
-})
-
-client.on('interactionCreate', function (interaction) {
-    console.log(interaction)
-})
-
-app.get('/', (req, res) => {
-    res.send('hello')
-})
-
-app.get('/auth/:id', (req, res) => {
-    let id = req.params.id
-    ids[id] = id
-    async function runner() {
-        let guild = client.guilds.cache.find(
-            (guild) => guild.name === 'uckers server',
-        )
-        let userId = '803954223641264148'
-        try {
-            let valiPowers = guild.roles.cache.find((r) => r.name === 'Auth')
-            let user = await guild.members.fetch(userId)
-            await user.roles.add(valiPowers)
-            sendDM(userId, 'You have been assigned Auth role')
-        } catch (error) {
-            console.log(error.message)
-        }
-    }
-
-    runner()
-
-    res.send(`<h1>${id}</h1>`)
 })
 
 app.listen(4000, () => {

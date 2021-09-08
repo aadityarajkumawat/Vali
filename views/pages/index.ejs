@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('../partials/head'); %>
+    </head>
+    <body>
+        <main>
+            <div class="head-images">
+                <img src="https://i.ibb.co/9nd4fsw/discord.png" alt="" />
+                <span class="seperator"></span>
+                <img src="https://i.ibb.co/XsT6m9M/jklu.png" alt="" />
+            </div>
+            <h1>Verify your JKLU E-Mail address</h1>
+            <% if(warning !== '') { %>
+            <div class="warning"><%=warning%></div>
+            <% } %>
+            <form id="verify-form" method="POST" action="#">
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    id="email-inp"
+                />
+                <input type="submit" value="Verify" />
+            </form>
+        </main>
+    </body>
+
+    <script>
+        if (document) {
+            document
+                .getElementById('verify-form')
+                .setAttribute('action', '<%-path%>')
+            // let emailInput = document.getElementById('email-inp')
+            // emailInput.addEventListener('', (e) => {})
+
+            console.log('<%-warning%>')
+        }
+    </script>
+</html>

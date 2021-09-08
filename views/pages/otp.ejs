@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <%- include('../partials/head'); %>
+    </head>
+    <body>
+        <main class="otp-container">
+            <div class="head-images">
+                <img src="https://i.ibb.co/9nd4fsw/discord.png" alt="" />
+                <span class="seperator"></span>
+                <img src="https://i.ibb.co/XsT6m9M/jklu.png" alt="" />
+            </div>
+            <h1>
+                An OTP has been sent to your E-Mail, enter that below to get
+                respective role
+            </h1>
+
+            <form action="#" method="POST" class="otp-form" id="otp-form">
+                <div class="d-flex">
+                    <input
+                        type="number"
+                        name="num1"
+                        inputmode="numeric"
+                        maxlength="1"
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                    />
+
+                    <input
+                        type="number"
+                        name="num2"
+                        inputmode="numeric"
+                        maxlength="1"
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                    />
+
+                    <input
+                        type="number"
+                        name="num3"
+                        inputmode="numeric"
+                        maxlength="1"
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                    />
+
+                    <input
+                        type="number"
+                        name="num4"
+                        inputmode="numeric"
+                        maxlength="1"
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                    />
+
+                    <input
+                        type="number"
+                        name="num5"
+                        inputmode="numeric"
+                        maxlength="1"
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                    />
+
+                    <input
+                        type="number"
+                        name="num6"
+                        inputmode="numeric"
+                        maxlength="1"
+                        oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                    />
+                </div>
+
+                <input type="submit" value="Verify OTP" />
+            </form>
+        </main>
+    </body>
+
+    <script>
+        if (document) {
+            document
+                .getElementById('otp-form')
+                .setAttribute('action', '<%-path%>')
+        }
+    </script>
+</html>

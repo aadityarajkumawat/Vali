@@ -1,0 +1,160 @@
+* {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type='number'] {
+    -moz-appearance: textfield;
+}
+
+.head-images {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.head-images img {
+    width: 100px;
+    margin: 0 10px;
+}
+
+.head-images .seperator {
+    height: 100px;
+    border-right: 1px solid rgb(208, 208, 208);
+    margin: 0 15px;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 150px;
+    max-width: 800px;
+    margin: auto;
+    text-align: center;
+}
+
+main h1 {
+    margin-bottom: 20px;
+    color: rgb(91, 91, 91);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+form input {
+    border: 1px solid rgb(187, 187, 187);
+    border-radius: 5px;
+    padding: 10px 15px;
+    width: 400px;
+    margin-bottom: 6px;
+    font-size: 19px;
+}
+
+form input[type='submit'] {
+    margin-top: 13px;
+    background-color: #0066ff;
+    color: white;
+    border: none;
+    padding: 15px 10px;
+    cursor: pointer;
+}
+
+/* .otp-container {
+} */
+
+.otp-form {
+    margin-top: 10px;
+}
+
+.otp-form div {
+    width: 400px;
+    justify-content: space-between;
+}
+
+.otp-form input {
+    width: 45px;
+    height: 45px;
+    padding: 10px;
+    font-size: 22px;
+}
+
+.otp-form input[type='submit'] {
+    width: 400px;
+    height: auto;
+    margin-top: 13px;
+    background-color: #0066ff;
+    color: white;
+    border: none;
+    padding: 15px 10px;
+    cursor: pointer;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.col {
+    flex-direction: column;
+}
+
+.j-c {
+    justify-content: center;
+}
+
+.a-c {
+    align-items: center;
+}
+
+.role-success {
+    align-items: center;
+    justify-content: center;
+}
+
+.role-success .success {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.role-success h1 {
+    margin-bottom: 0;
+}
+
+.role-success img {
+    width: 100px;
+    margin-right: 20px;
+}
+
+.warning {
+    width: 400px;
+    background-color: rgb(255, 200, 200);
+    padding: 10px;
+    text-align: left;
+    margin-bottom: 10px;
+    color: rgb(164, 0, 0);
+    border-radius: 5px;
+}
