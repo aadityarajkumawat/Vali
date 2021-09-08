@@ -16,10 +16,18 @@
             <% } %>
             <form id="verify-form" method="POST" action="#">
                 <input
+                    type="text"
+                    name="name"
+                    placeholder="Name"
+                    id="name-inp"
+                    required="true"
+                />
+                <input
                     type="email"
                     name="email"
                     placeholder="Email"
                     id="email-inp"
+                    required="true"
                 />
                 <input type="submit" value="Verify" />
             </form>
@@ -31,10 +39,6 @@
             document
                 .getElementById('verify-form')
                 .setAttribute('action', '<%-path%>')
-            // let emailInput = document.getElementById('email-inp')
-            // emailInput.addEventListener('', (e) => {})
-
-            console.log('<%-warning%>')
         }
     </script>
 </html>

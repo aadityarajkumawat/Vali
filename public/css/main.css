@@ -79,9 +79,6 @@ form input[type='submit'] {
     cursor: pointer;
 }
 
-/* .otp-container {
-} */
-
 .otp-form {
     margin-top: 10px;
 }
@@ -107,6 +104,41 @@ form input[type='submit'] {
     border: none;
     padding: 15px 10px;
     cursor: pointer;
+}
+@media only screen and (max-width: 600px) {
+    main h1 {
+        font-size: 23px;
+    }
+
+    form input {
+        width: 300px;
+        padding: 8px 10px;
+    }
+
+    .otp-container {
+        padding: auto 20px;
+        width: 300px;
+    }
+
+    .otp-container h3 {
+        color: rgb(91, 91, 91);
+    }
+
+    .otp-container form {
+        margin-top: 20px;
+    }
+
+    .otp-form input {
+        width: 40px;
+        height: 40px;
+    }
+
+    .otp-form .d-flex {
+        width: 300px;
+    }
+    .otp-form input[type='submit'] {
+        width: 300px;
+    }
 }
 
 .d-flex {

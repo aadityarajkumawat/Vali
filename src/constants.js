@@ -9,5 +9,5 @@ const intents = [
     'GUILDS',
     'GUILD_INTEGRATIONS',
 ]
-
-module.exports = { SUCCESS, intents }
+const __prod__ = process.env.NODE_ENV === 'production'
+module.exports = { SUCCESS, intents, __prod__ }
