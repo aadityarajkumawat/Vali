@@ -38,7 +38,9 @@ client.on('guildMemberAdd', (member) => {
     let userId = member.user.id
     ids[userId] = { userId, OTP: '' }
     let url = `http://localhost:4000/verify/${userId}`
-    sendDM(userId, `Please verify your account at ${url}`)
+    ;(async () => {
+        await sendDM(userId, `Please verify your account at ${url}`)
+    })()
 })
 
 app.get('/', (_, res) => {
@@ -107,9 +109,9 @@ app.post('/give-role/:id', (req, res) => {
                 let valiPowers = guild.roles.cache.find((r) => r.name === role)
                 let user = await guild.members.fetch(userId)
                 await user.roles.add(valiPowers)
-                sendDM(userId, 'You have been assigned Student role')
+                await sendDM(userId, 'You have been assigned Student role')
             } catch {
-                sendDM(userId, 'Oops! An error occured')
+                await sendDM(userId, 'Oops! An error occured')
             }
         }
         assignRole('uckers server', 'Student')
@@ -121,6 +123,8 @@ app.post('/give-role/:id', (req, res) => {
 })
 
 app.listen(4000 || process.env.PORT, () => {
-    client.login(process.env.DISCORDJS_BOT_TOKEN)
+    ;(async () => {
+        client.login(process.env.DISCORDJS_BOT_TOKEN)
+    })()
     console.log('server is running')
 })
