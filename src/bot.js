@@ -37,7 +37,7 @@ client.on('guildMemberAdd', (member) => {
     )
     let userId = member.user.id
     ids[userId] = { userId, OTP: '' }
-    let url = `http://localhost:4000/verify/${userId}`
+    let url = `https://radiant-ocean-74401.herokuapp.com/verify/${userId}`
     ;(async () => {
         await sendDM(userId, `Please verify your account at ${url}`)
     })()
