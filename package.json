@@ -8,6 +8,9 @@
         "start": "node ./src/bot.js",
         "dev": "nodemon ./src/bot.js"
     },
+    "engines": {
+        "node": "16.9.0"
+    },
     "keywords": [],
     "author": "",
     "license": "ISC",
