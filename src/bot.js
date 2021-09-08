@@ -120,7 +120,7 @@ app.post('/give-role/:id', (req, res) => {
     }
 })
 
-app.listen(4000, () => {
+app.listen(4000 || process.env.PORT, () => {
     client.login(process.env.DISCORDJS_BOT_TOKEN)
     console.log('server is running')
 })
