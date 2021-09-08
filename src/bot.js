@@ -23,9 +23,6 @@ app.use(express.static(__dirname + '/../public'))
 // Starting APIs
 initializeMailAPI()
 
-/**
- * { '8475698436534454': {id: 8475698436534454, name: 'Aditya Raj Kumawat', otp: '235422'} }
- */
 // const ids = {
 //     '847392118116188231': {
 //         id: '847392118116188231',
