@@ -5,11 +5,44 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            img {
+                width: 100px;
+                margin: 10px;
+            }
+
+            .images {
+                display: flex;
+                align-items: center;
+            }
+
+            .seperator {
+                height: 100px;
+                border-right: 1px solid rgb(208, 208, 208);
+                margin: 0 15px;
+            }
+        </style>
     </head>
     <body>
-        <h1>Complete verification to access JKLU's discord server</h1>
-        <p>Click on the button below to verify you identity</p>
+        <div>
+            <h1>Join JKLU's Discord server</h1>
+            <p>Here we will put some details about our server</p>
+            <div class="images">
+                <img src="https://i.ibb.co/qB2g4k0/discord.png" alt="" />
+                <span class="seperator"></span>
+                <img src="https://i.ibb.co/XsT6m9M/jklu.png" alt="" />
+            </div>
 
-        <button>Verify</button>
+            <h2>Please use the OTP below to verify your account</h2>
+            <h3>${OTP}</h3>
+            <br />
+            <p>Thanks, for joining our server</p>
+        </div>
     </body>
 </html>
