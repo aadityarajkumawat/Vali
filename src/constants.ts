@@ -1,8 +1,8 @@
 // const { Intents } = require('discord.js')
-import { Intents } from 'discord.js'
+import { ClientOptions, Intents } from 'discord.js'
 
 export const SUCCESS = 202
-export const intents = [
+export const intents: ClientOptions['intents'] = [
     Intents.FLAGS.GUILDS,
     Intents.FLAGS.GUILD_MESSAGES,
     'GUILD_PRESENCES',

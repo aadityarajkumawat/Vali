@@ -2,7 +2,11 @@ import { SUCCESS } from './constants'
 import sgMail from '@sendgrid/mail'
 import { client } from './client'
 
-export async function sendMail(to, content, from = 'arkumawat78@gmail.com') {
+export async function sendMail(
+    to: string,
+    content: string,
+    from = 'arkumawat78@gmail.com',
+) {
     let sent = false
     const msg = {
         to,
@@ -22,19 +26,19 @@ export async function sendMail(to, content, from = 'arkumawat78@gmail.com') {
     return sent
 }
 
-export async function sendDM(userId, message, force = true) {
+export async function sendDM(userId: string, message: string, force = true) {
     const user = await client.users.fetch(userId, {
         force,
     })
     await user.send(message)
 }
 
-export function isJKLUEmail(email) {
+export function isJKLUEmail(email: string) {
     let idx = email.indexOf('@')
     return email.substr(idx, email.length) === '@jklu.edu.in'
 }
 
-export function dataIterator(container) {
+export function dataIterator(container: string) {
     let idx = -1
     return next
 
@@ -45,14 +49,14 @@ export function dataIterator(container) {
 }
 
 export function initializeMailAPI() {
-    sgMail.setApiKey(process.env.SEND_GRID_API)
+    sgMail.setApiKey(process.env.SEND_GRID_API as string)
 }
 
-export function OTPGenerator() {
+export function OTPGenerator(): string {
     return Math.random().toString().substr(2, 6)
 }
 
-export function generateEmail(OTP) {
+export function generateEmail(OTP: string) {
     return `
 <!DOCTYPE html>
 <html lang="en">

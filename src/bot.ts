@@ -1,15 +1,15 @@
 require('dotenv').config()
 import express from 'express'
-import {
-    isJKLUEmail,
-    sendDM,
-    sendMail,
-    initializeMailAPI,
-    OTPGenerator,
-    generateEmail,
-} from './helpers'
 import { client } from './client'
 import { __prod__ } from './constants'
+import {
+    generateEmail,
+    initializeMailAPI,
+    isJKLUEmail,
+    OTPGenerator,
+    sendDM,
+    sendMail,
+} from './helpers'
 
 const app = express()
 
@@ -30,10 +30,21 @@ initializeMailAPI()
 //         otp: '454542',
 //     },
 // }
-let ids = {}
+
+interface User {
+    userId: string
+    name: string
+    OTP: string
+}
+
+let ids: Record<string, User> = {}
 
 client.on('ready', function () {
-    console.log(`${client.user.username} is now active`)
+    if (client.user) {
+        console.log(`${client.user.username} is now active`)
+    } else {
+        console.log('Client is not ready at the moment')
+    }
 })
 
 client.on('guildMemberAdd', (member) => {
@@ -41,7 +52,7 @@ client.on('guildMemberAdd', (member) => {
         `New user "${member.user.username}" has joined "${member.guild.name}"`,
     )
     let userId = member.user.id
-    ids[userId] = { userId, OTP: '' }
+    ids[userId] = { userId, OTP: 'xxxxxx', name: '<empty>' }
     let url = __prod__
         ? `https://radiant-ocean-74401.herokuapp.com/verify/${userId}`
         : `http://localhost:4000/verify/${userId}`
@@ -87,7 +98,8 @@ app.post('/auth/:id', (req, res) => {
     let email = req.body.email
     if (userId in ids && isJKLUEmail(email) && name !== '') {
         ;(async () => {
-            let _ = await sendMail(email, generateEmail(OTP))
+            let sent = await sendMail(email, generateEmail(OTP))
+            if (!sent) return
             res.redirect(`/complete/${userId}`)
         })()
     } else {
@@ -114,14 +126,16 @@ app.post('/give-role/:id', (req, res) => {
         inputOTP = inputOTP.concat(req.body[key])
     }
     if (userId in ids && inputOTP === ids[userId].OTP) {
-        async function assignRole(serverName, role) {
+        async function assignRole(serverName: string, roleName: string) {
             let guild = client.guilds.cache.find(
                 (guild) => guild.name === serverName,
             )
+            if (!guild) return
             try {
-                let valiPowers = guild.roles.cache.find((r) => r.name === role)
+                let role = guild.roles.cache.find((r) => r.name === roleName)
+                if (!role) return
                 let user = await guild.members.fetch(userId)
-                await user.roles.add(valiPowers)
+                await user.roles.add(role)
                 await user.setNickname(ids[userId].name)
                 await sendDM(userId, 'You have been assigned Student role')
             } catch (error) {
