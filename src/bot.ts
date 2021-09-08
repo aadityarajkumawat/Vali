@@ -1,15 +1,15 @@
 require('dotenv').config()
-const express = require('express')
-const {
+import express from 'express'
+import {
     isJKLUEmail,
     sendDM,
     sendMail,
     initializeMailAPI,
     OTPGenerator,
     generateEmail,
-} = require('./helpers')
-const { client } = require('./client')
-const { __prod__ } = require('./constants')
+} from './helpers'
+import { client } from './client'
+import { __prod__ } from './constants'
 
 const app = express()
 
