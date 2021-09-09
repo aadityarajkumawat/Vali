@@ -5,7 +5,7 @@ import { client } from './client'
 export async function sendMail(
     to: string,
     content: string,
-    from = 'arkumawat78@gmail.com',
+    from = process.env.SENDERS_EMAIL as string,
 ) {
     let sent = false
     const msg = {

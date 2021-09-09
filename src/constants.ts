@@ -1,4 +1,3 @@
-// const { Intents } = require('discord.js')
 import { ClientOptions, Intents } from 'discord.js'
 
 export const SUCCESS = 202
