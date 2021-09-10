@@ -1,6 +1,7 @@
 import { SUCCESS } from './constants'
 import sgMail from '@sendgrid/mail'
 import { client } from './client'
+import { User } from './types'
 
 export async function sendMail(
     to: string,
@@ -54,6 +55,15 @@ export function initializeMailAPI() {
 
 export function OTPGenerator(): string {
     return Math.random().toString().substr(2, 6)
+}
+
+export function initializeUser(userId: string) {
+    let user: User = {
+        userId,
+        name: '<empty>',
+        OTP: 'xxxxxx',
+    }
+    return user
 }
 
 export function generateEmail(OTP: string) {

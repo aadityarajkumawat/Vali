@@ -3,11 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateEmail = exports.OTPGenerator = exports.initializeMailAPI = exports.dataIterator = exports.isJKLUEmail = exports.sendDM = exports.sendMail = void 0;
+exports.generateEmail = exports.initializeUser = exports.OTPGenerator = exports.initializeMailAPI = exports.dataIterator = exports.isJKLUEmail = exports.sendDM = exports.sendMail = void 0;
 const constants_1 = require("./constants");
 const mail_1 = __importDefault(require("@sendgrid/mail"));
 const client_1 = require("./client");
-async function sendMail(to, content, from = 'arkumawat78@gmail.com') {
+async function sendMail(to, content, from = process.env.SENDERS_EMAIL) {
     let sent = false;
     const msg = {
         to,
@@ -55,6 +55,15 @@ function OTPGenerator() {
     return Math.random().toString().substr(2, 6);
 }
 exports.OTPGenerator = OTPGenerator;
+function initializeUser(userId) {
+    let user = {
+        userId,
+        name: '<empty>',
+        OTP: 'xxxxxx',
+    };
+    return user;
+}
+exports.initializeUser = initializeUser;
 function generateEmail(OTP) {
     return `
 <!DOCTYPE html>
