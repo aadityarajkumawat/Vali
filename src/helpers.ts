@@ -151,6 +151,20 @@ export async function assignRole(
     }
 }
 
+export async function doesUserAlreadyExists(email: string) {
+    let userAlreadyExists = false
+    let userKeys = await redis.keys('disuser:*')
+
+    for (let id of userKeys) {
+        let userJSON = await redis.get(id)
+        if (!userJSON) break
+        let user = JSON.parse(userJSON) as User
+        if (user.email === email) userAlreadyExists = true
+    }
+
+    return userAlreadyExists
+}
+
 export function generateEmail(OTP: string) {
     return `
 <!DOCTYPE html>

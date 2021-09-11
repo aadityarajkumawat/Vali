@@ -5,6 +5,7 @@ import { __prod__ } from './constants'
 import {
     assignRole,
     buildOTPString,
+    doesUserAlreadyExists,
     encodeUserId,
     findUser,
     generateEmail,
@@ -41,8 +42,8 @@ client.on('ready', function () {
 
 // runs the function as soon as a new member
 // enters the server.
-client.on('guildMemberAdd', (member) => {
-    ;(async () => {
+client.on('guildMemberAdd', function (member) {
+    ;(async function () {
         let userId = member.user.id
         userId = encodeUserId(userId)
 
@@ -65,18 +66,18 @@ client.on('guildMemberAdd', (member) => {
     })()
 })
 
-app.get('/', (_, res) => {
+app.get('/', function (_, res) {
     res.render('pages/notfound', {})
 })
 
-app.get('/:anything', (_, res) => {
+app.get('/:anything', function (_, res) {
     res.render('pages/notfound', {})
 })
 
 // the first page that open up, asking for email and name
 // of user.
-app.get('/verify/:userId/:error?', (req, res) => {
-    ;(async () => {
+app.get('/verify/:userId/:error?', function (req, res) {
+    ;(async function () {
         let { userId, error } = req.params
         let redirectTo = `/auth/${userId}`
 
@@ -99,23 +100,14 @@ app.get('/verify/:userId/:error?', (req, res) => {
 })
 
 // processing entered email and name, and validating user info
-app.post('/auth/:userId', (req, res) => {
-    ;(async () => {
+app.post('/auth/:userId', function (req, res) {
+    ;(async function () {
         let { email, name } = req.body
         let userId = req.params.userId
         let redirectTo = `/auth/${userId}`
 
         // check if the user with the entred email already exists
-        let userAlreadyExists = false
-        let userKeys = await redis.keys('disuser:*')
-
-        for (let id of userKeys) {
-            let userJSON = await redis.get(id)
-            if (!userJSON) break
-            let user = JSON.parse(userJSON) as User
-            if (user.email === email) userAlreadyExists = true
-        }
-
+        let userAlreadyExists = await doesUserAlreadyExists(email)
         if (userAlreadyExists) {
             res.render('pages/index', {
                 path: redirectTo,
@@ -157,8 +149,8 @@ app.post('/auth/:userId', (req, res) => {
     })()
 })
 
-app.get('/complete/:id', (req, res) => {
-    ;(async () => {
+app.get('/complete/:id', function (req, res) {
+    ;(async function () {
         let userId = req.params.id
 
         let { found: userExists } = await findUser(userId)
@@ -171,8 +163,8 @@ app.get('/complete/:id', (req, res) => {
     })()
 })
 
-app.post('/give-role/:id', (req, res) => {
-    ;(async () => {
+app.post('/give-role/:id', function (req, res) {
+    ;(async function () {
         let userId = req.params.id
 
         let { found: userExists, user } = await findUser(userId)
@@ -193,9 +185,9 @@ app.post('/give-role/:id', (req, res) => {
 
 const PORT = process.env.PORT || 4000
 
-app.listen(PORT, () => {
-    client.login(process.env.DISCORDJS_BOT_TOKEN).then(() => {
-        console.log('Client logged in')
-    })
-    console.log('server is running')
+app.listen(PORT, function () {
+    ;(async function () {
+        client.login(process.env.DISCORDJS_BOT_TOKEN)
+        console.log('server is running')
+    })()
 })
