@@ -29,8 +29,8 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-yark.lock
-package-lock.json
-
 .cache
 .env
+
+# build
+dist/
