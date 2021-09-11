@@ -5,8 +5,8 @@ import { redis } from './redisClient'
 import { User, UserResponse } from './types'
 
 let transporter = nodemailer.createTransport({
-    host: 'smtp.office365.com',
-    port: 587,
+    host: process.env.SMTP_HOST as string,
+    port: Number(process.env.SMTP_PORT as string),
     secure: false,
     auth: {
         user: process.env.SENDERS_EMAIL,
