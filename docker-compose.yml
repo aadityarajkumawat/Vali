@@ -1,11 +1,13 @@
 version: '3.4'
 
 services:
+  redisdb:
+    image: redis
+    ports:
+      - '6379:6379'
   bot:
-    image: validation-bot:0.1.0
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: vali
+    depends_on:
+      - redisdb
     ports:
       - 4000:4000
-    restart: always
