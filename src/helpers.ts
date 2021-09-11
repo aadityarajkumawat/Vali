@@ -1,7 +1,18 @@
-import { SUCCESS } from './constants'
-import sgMail from '@sendgrid/mail'
+import { Role } from 'discord.js'
+import nodemailer from 'nodemailer'
 import { client } from './client'
-import { User } from './types'
+import { redis } from './redisClient'
+import { User, UserResponse } from './types'
+
+let transporter = nodemailer.createTransport({
+    host: 'smtp.office365.com',
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.SENDERS_EMAIL,
+        pass: process.env.SENDERS_EMAIL_PASSWORD,
+    },
+})
 
 export async function sendMail(
     to: string,
@@ -9,6 +20,7 @@ export async function sendMail(
     from = process.env.SENDERS_EMAIL as string,
 ) {
     let sent = false
+
     const msg = {
         to,
         from,
@@ -18,8 +30,10 @@ export async function sendMail(
     }
 
     try {
-        const mail = await sgMail.send(msg, false)
-        sent = mail[0].statusCode === SUCCESS
+        const mail = await transporter.sendMail(msg)
+        if (mail.accepted.includes(to)) {
+            sent = true
+        }
     } catch {
         sent = false
     }
@@ -28,6 +42,9 @@ export async function sendMail(
 }
 
 export async function sendDM(userId: string, message: string, force = true) {
+    if (userId.includes('disuser:')) {
+        userId = decodeUserId(userId)
+    }
     const user = await client.users.fetch(userId, {
         force,
     })
@@ -37,6 +54,16 @@ export async function sendDM(userId: string, message: string, force = true) {
 export function isJKLUEmail(email: string) {
     let idx = email.indexOf('@')
     return email.substr(idx, email.length) === '@jklu.edu.in'
+}
+
+export async function asyncCallAll(...fns: (() => Promise<any>)[]) {
+    for (let fn of fns) {
+        await fn()
+    }
+}
+
+export function callAll(...fns: (() => any)[]) {
+    fns.forEach((fn) => fn())
 }
 
 export function dataIterator(container: string) {
@@ -49,10 +76,6 @@ export function dataIterator(container: string) {
     }
 }
 
-export function initializeMailAPI() {
-    sgMail.setApiKey(process.env.SEND_GRID_API as string)
-}
-
 export function OTPGenerator(): string {
     return Math.random().toString().substr(2, 6)
 }
@@ -62,8 +85,70 @@ export function initializeUser(userId: string) {
         userId,
         name: '<empty>',
         OTP: 'xxxxxx',
+        email: '<empty>@blank.com',
     }
     return user
+}
+
+export function encodeUserId(userId: string) {
+    return `disuser:${userId}`
+}
+
+export function decodeUserId(userId: string) {
+    return userId.substr(8, userId.length)
+}
+
+/**
+ * checks if the user exists or not
+ * @param userId discord ID of user
+ * @returns boolean
+ */
+export async function findUser(userId: string): Promise<UserResponse> {
+    let userJSON = await redis.get(userId)
+    if (!userJSON) return { error: 'User not found', found: false, user: null }
+    let user = JSON.parse(userJSON) as User
+    return { error: null, found: true, user }
+}
+
+export function buildOTPString(body: any) {
+    let inputOTP = ''
+    for (let key of Object.keys(body)) {
+        inputOTP = inputOTP.concat(body[key])
+    }
+    return inputOTP
+}
+
+export async function assignRole(
+    user: User,
+    serverName: string,
+    roleName: string,
+) {
+    let guild = client.guilds.cache.find((guild) => guild.name === serverName)
+    if (!guild) return
+
+    let userId = decodeUserId(user.userId)
+
+    try {
+        let role = guild.roles.cache.find((r) => r.name === roleName)
+        if (!role) return
+        let member = await guild.members.fetch(userId)
+
+        await asyncCallAll(addRole, setNickame, sendDMAsync)
+
+        async function addRole() {
+            await member.roles.add(role as Role)
+        }
+
+        async function setNickame() {
+            await member.setNickname((user as User).name)
+        }
+
+        async function sendDMAsync() {
+            await sendDM(userId, `You have been assigned ${roleName} role`)
+        }
+    } catch (error) {
+        await sendDM(userId, 'Oops! An error occured')
+    }
 }
 
 export function generateEmail(OTP: string) {
@@ -74,7 +159,7 @@ export function generateEmail(OTP: string) {
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
+        <title>JKLU's Discord Server</title>
         <style>
             * {
                 margin: 0;

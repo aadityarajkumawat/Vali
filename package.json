@@ -25,6 +25,10 @@
         "ejs": "^3.1.6",
         "express": "^4.17.1",
         "ioredis": "^4.27.9",
+        "nodemailer": "^6.6.3",
         "typescript": "^4.4.2"
+    },
+    "devDependencies": {
+        "@types/nodemailer": "^6.4.4"
     }
 }

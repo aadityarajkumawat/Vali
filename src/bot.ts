@@ -3,8 +3,11 @@ import express from 'express'
 import { client } from './client'
 import { __prod__ } from './constants'
 import {
+    assignRole,
+    buildOTPString,
+    encodeUserId,
+    findUser,
     generateEmail,
-    initializeMailAPI,
     initializeUser,
     isJKLUEmail,
     OTPGenerator,
@@ -12,7 +15,7 @@ import {
     sendMail,
 } from './helpers'
 import { redis } from './redisClient'
-import { BinaryStatus } from './types'
+import { User } from './types'
 
 const app = express()
 
@@ -23,8 +26,10 @@ app.set('view engine', 'ejs')
 app.use(express.urlencoded({ extended: false }))
 app.use(express.static(__dirname + '/../public'))
 
-// Starting APIs
-initializeMailAPI()
+let indexPageParams = {
+    path: '',
+    warning: '',
+}
 
 client.on('ready', function () {
     if (client.user) {
@@ -34,14 +39,15 @@ client.on('ready', function () {
     }
 })
 
+// runs the function as soon as a new member
+// enters the server.
 client.on('guildMemberAdd', (member) => {
     ;(async () => {
-        console.log(
-            `New user "${member.user.username}" has joined "${member.guild.name}"`,
-        )
         let userId = member.user.id
-        let user = initializeUser(userId)
+        userId = encodeUserId(userId)
 
+        // creating a new user in database
+        let user = initializeUser(userId)
         let isSet = await redis.set(userId, JSON.stringify(user))
         if (!isSet) {
             await sendDM(
@@ -51,6 +57,7 @@ client.on('guildMemberAdd', (member) => {
             return
         }
 
+        // send the verfication link through a DM from bot
         let url = __prod__
             ? `https://radiant-ocean-74401.herokuapp.com/verify/${userId}`
             : `http://localhost:4000/verify/${userId}`
@@ -66,16 +73,23 @@ app.get('/:anything', (_, res) => {
     res.render('pages/notfound', {})
 })
 
+// the first page that open up, asking for email and name
+// of user.
 app.get('/verify/:userId/:error?', (req, res) => {
     ;(async () => {
         let { userId, error } = req.params
-        let userInDB = (await redis.exists(userId)) as BinaryStatus
-        let userExists = userInDB === BinaryStatus.Success
-        if (userExists) {
-            res.render('pages/index', { path: `/auth/${userId}`, warning: '' })
+        let redirectTo = `/auth/${userId}`
+
+        let { found: userExists } = await findUser(userId)
+
+        if (userExists && !error) {
+            res.render('pages/index', {
+                ...indexPageParams,
+                path: redirectTo,
+            })
         } else if (error === 'true') {
             res.render('pages/index', {
-                path: `/auth/${userId}`,
+                path: redirectTo,
                 warning: 'Enter JKLU E-Mail address only',
             })
         } else {
@@ -84,72 +98,98 @@ app.get('/verify/:userId/:error?', (req, res) => {
     })()
 })
 
-// app.post('/auth/:id', (req, res) => {
-//     let userId = req.params.id
-//     let name = req.body.name
-//     let OTP = OTPGenerator()
-//     if (userId in ids) {
-//         ids[userId].OTP = OTP
-//         ids[userId].name = name
-//     } else {
-//         res.render('pages/notfound')
-//         return
-//     }
-//     let email = req.body.email
-//     if (userId in ids && isJKLUEmail(email) && name !== '') {
-//         ;(async () => {
-//             let sent = await sendMail(email, generateEmail(OTP))
-//             if (!sent) return
-//             res.redirect(`/complete/${userId}`)
-//         })()
-//     } else {
-//         res.render('pages/index', {
-//             path: `/auth/${userId}`,
-//             warning: 'Enter JKLU E-Mail address only',
-//         })
-//     }
-// })
+// processing entered email and name, and validating user info
+app.post('/auth/:userId', (req, res) => {
+    ;(async () => {
+        let { email, name } = req.body
+        let userId = req.params.userId
+        let redirectTo = `/auth/${userId}`
 
-// app.get('/complete/:id', (req, res) => {
-//     let userId = req.params.id
-//     if (userId in ids) {
-//         res.render('pages/otp', { path: `/give-role/${userId}` })
-//     } else {
-//         res.render('pages/notfound')
-//     }
-// })
+        // check if the user with the entred email already exists
+        let userAlreadyExists = false
+        let userKeys = await redis.keys('disuser:*')
 
-// app.post('/give-role/:id', (req, res) => {
-//     let userId = req.params.id
-//     let inputOTP = ''
-//     for (let key of Object.keys(req.body)) {
-//         inputOTP = inputOTP.concat(req.body[key])
-//     }
-//     if (userId in ids && inputOTP === ids[userId].OTP) {
-//         async function assignRole(serverName: string, roleName: string) {
-//             let guild = client.guilds.cache.find(
-//                 (guild) => guild.name === serverName,
-//             )
-//             if (!guild) return
-//             try {
-//                 let role = guild.roles.cache.find((r) => r.name === roleName)
-//                 if (!role) return
-//                 let user = await guild.members.fetch(userId)
-//                 await user.roles.add(role)
-//                 await user.setNickname(ids[userId].name)
-//                 await sendDM(userId, 'You have been assigned Student role')
-//             } catch (error) {
-//                 await sendDM(userId, 'Oops! An error occured')
-//             }
-//         }
-//         assignRole('uckers server', 'Student').then(() => {
-//             delete ids[userId]
-//         })
-//         res.render('pages/success')
-//     } else {
-//         res.render('pages/notfound')
-//     }
-// })
+        for (let id of userKeys) {
+            let userJSON = await redis.get(id)
+            if (!userJSON) break
+            let user = JSON.parse(userJSON) as User
+            if (user.email === email) userAlreadyExists = true
+        }
+
+        if (userAlreadyExists) {
+            res.render('pages/index', {
+                path: redirectTo,
+                warning: 'User with this E-Mail already exists',
+            })
+        }
+
+        //If the user is being added for the first time
+        let OTP = OTPGenerator()
+        let { found: blankUserExists } = await findUser(userId)
+
+        if (blankUserExists && isJKLUEmail(email) && name !== '') {
+            // get the blank user object
+            let userJSON = await redis.get(userId)
+            if (!userJSON) {
+                res.render('pages/notfound')
+                return
+            }
+            let user = JSON.parse(userJSON) as User
+
+            // add data to it
+            let newUserJSON: User = { ...user, OTP, email, name }
+            let setUserStatus = await redis.set(
+                user.userId,
+                JSON.stringify(newUserJSON),
+            )
+            if (!setUserStatus) {
+                res.render('pages/notfound')
+                return
+            }
+
+            // send an email with the OTP
+            let sent = await sendMail(email, generateEmail(OTP))
+            if (!sent) return
+            res.redirect(`/complete/${userId}`)
+        } else {
+            res.render('pages/notfound')
+        }
+    })()
+})
+
+app.get('/complete/:id', (req, res) => {
+    ;(async () => {
+        let userId = req.params.id
+
+        let { found: userExists } = await findUser(userId)
+
+        if (userExists) {
+            res.render('pages/otp', { path: `/give-role/${userId}` })
+        } else {
+            res.render('pages/notfound')
+        }
+    })()
+})
+
+app.post('/give-role/:id', (req, res) => {
+    ;(async () => {
+        let userId = req.params.id
+
+        let { found: userExists, user } = await findUser(userId)
+
+        let inputOTP = buildOTPString(req.body)
+
+        // if the user is found and OTP matches, then we assign him/ her
+        // their respective role, set their nickname and send them DM,
+        // about the updated changes.
+        if (userExists && inputOTP === (user as User).OTP) {
+            await assignRole(user as User, 'uckers server', 'Student')
+            res.render('pages/success')
+        } else {
+            res.render('pages/notfound')
+        }
+    })()
+})
 
 const PORT = process.env.PORT || 4000
 

@@ -9,12 +9,14 @@ const client_1 = require("./client");
 const constants_1 = require("./constants");
 const helpers_1 = require("./helpers");
 const redisClient_1 = require("./redisClient");
-const types_1 = require("./types");
 const app = (0, express_1.default)();
 app.set('view engine', 'ejs');
 app.use(express_1.default.urlencoded({ extended: false }));
 app.use(express_1.default.static(__dirname + '/../public'));
-(0, helpers_1.initializeMailAPI)();
+let indexPageParams = {
+    path: '',
+    warning: '',
+};
 client_1.client.on('ready', function () {
     if (client_1.client.user) {
         console.log(`${client_1.client.user.username} is now active`);
@@ -26,8 +28,8 @@ client_1.client.on('ready', function () {
 client_1.client.on('guildMemberAdd', (member) => {
     ;
     (async () => {
-        console.log(`New user "${member.user.username}" has joined "${member.guild.name}"`);
         let userId = member.user.id;
+        userId = (0, helpers_1.encodeUserId)(userId);
         let user = (0, helpers_1.initializeUser)(userId);
         let isSet = await redisClient_1.redis.set(userId, JSON.stringify(user));
         if (!isSet) {
@@ -50,16 +52,91 @@ app.get('/verify/:userId/:error?', (req, res) => {
     ;
     (async () => {
         let { userId, error } = req.params;
-        let userInDB = (await redisClient_1.redis.exists(userId));
-        let userExists = userInDB === types_1.BinaryStatus.Success;
-        if (userExists) {
-            res.render('pages/index', { path: `/auth/${userId}`, warning: '' });
+        let redirectTo = `/auth/${userId}`;
+        let { found: userExists } = await (0, helpers_1.findUser)(userId);
+        if (userExists && !error) {
+            res.render('pages/index', Object.assign(Object.assign({}, indexPageParams), { path: redirectTo }));
         }
         else if (error === 'true') {
             res.render('pages/index', {
-                path: `/auth/${userId}`,
+                path: redirectTo,
                 warning: 'Enter JKLU E-Mail address only',
             });
+        }
+        else {
+            res.render('pages/notfound');
+        }
+    })();
+});
+app.post('/auth/:userId', (req, res) => {
+    ;
+    (async () => {
+        let { email, name } = req.body;
+        let userId = req.params.userId;
+        let redirectTo = `/auth/${userId}`;
+        let userAlreadyExists = false;
+        let userKeys = await redisClient_1.redis.keys('disuser:*');
+        for (let id of userKeys) {
+            let userJSON = await redisClient_1.redis.get(id);
+            if (!userJSON)
+                break;
+            let user = JSON.parse(userJSON);
+            if (user.email === email)
+                userAlreadyExists = true;
+        }
+        if (userAlreadyExists) {
+            res.render('pages/index', {
+                path: redirectTo,
+                warning: 'User with this E-Mail already exists',
+            });
+        }
+        let OTP = (0, helpers_1.OTPGenerator)();
+        let { found: blankUserExists } = await (0, helpers_1.findUser)(userId);
+        if (blankUserExists && (0, helpers_1.isJKLUEmail)(email) && name !== '') {
+            let userJSON = await redisClient_1.redis.get(userId);
+            if (!userJSON) {
+                res.render('pages/notfound');
+                return;
+            }
+            let user = JSON.parse(userJSON);
+            let newUserJSON = Object.assign(Object.assign({}, user), { OTP, email, name });
+            let setUserStatus = await redisClient_1.redis.set(user.userId, JSON.stringify(newUserJSON));
+            if (!setUserStatus) {
+                res.render('pages/notfound');
+                return;
+            }
+            let sent = await (0, helpers_1.sendMail)(email, (0, helpers_1.generateEmail)(OTP));
+            if (!sent)
+                return;
+            res.redirect(`/complete/${userId}`);
+        }
+        else {
+            res.render('pages/notfound');
+        }
+    })();
+});
+app.get('/complete/:id', (req, res) => {
+    ;
+    (async () => {
+        let userId = req.params.id;
+        let { found: userExists } = await (0, helpers_1.findUser)(userId);
+        if (userExists) {
+            res.render('pages/otp', { path: `/give-role/${userId}` });
+        }
+        else {
+            res.render('pages/notfound');
+        }
+    })();
+});
+app.post('/give-role/:id', (req, res) => {
+    ;
+    (async () => {
+        let userId = req.params.id;
+        let { found: userExists, user } = await (0, helpers_1.findUser)(userId);
+        let inputOTP = (0, helpers_1.buildOTPString)(req.body);
+        if (userExists && inputOTP === user.OTP) {
+            await (0, helpers_1.assignRole)(user, 'uckers server', 'Student');
+            res.render('pages/success');
         }
         else {
             res.render('pages/notfound');
