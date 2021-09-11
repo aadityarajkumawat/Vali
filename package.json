@@ -4,12 +4,14 @@
     "description": "",
     "main": "index.js",
     "scripts": {
+        "build": "tsc",
         "watch": "tsc -w",
         "start": "node ./dist/bot.js",
         "dev": "nodemon ./dist/bot.js"
+        
     },
     "engines": {
-        "node": "16.9.0"
+        "node": "^16.8.0"
     },
     "keywords": [],
     "author": "",
