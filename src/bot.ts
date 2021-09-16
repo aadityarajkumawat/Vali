@@ -113,6 +113,7 @@ app.post('/auth/:userId', function (req, res) {
                 path: redirectTo,
                 warning: 'User with this E-Mail already exists',
             })
+            return
         }
 
         //If the user is being added for the first time
@@ -175,7 +176,7 @@ app.post('/give-role/:id', function (req, res) {
         // their respective role, set their nickname and send them DM,
         // about the updated changes.
         if (userExists && inputOTP === (user as User).OTP) {
-            await assignRole(user as User, 'uckers server', 'Student')
+            await assignRole(user as User, 'Holy Grail', 'Student')
             res.render('pages/success')
         } else {
             res.render('pages/notfound')

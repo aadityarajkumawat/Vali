@@ -3,7 +3,7 @@ import { __prod__ } from './constants'
 
 // add production configs later
 const config: RedisOptions = {
-    host: 'redisdb',
+    host: 'localhost',
     port: 6379,
 }
 

@@ -105,6 +105,61 @@ form input[type='submit'] {
     padding: 15px 10px;
     cursor: pointer;
 }
+
+.d-flex {
+    display: flex;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.col {
+    flex-direction: column;
+}
+
+.j-c {
+    justify-content: center;
+}
+
+.a-c {
+    align-items: center;
+}
+
+.role-success {
+    align-items: center;
+    justify-content: center;
+}
+
+.role-success .success {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.role-success .success .image-container {
+    margin-right: 10px;
+}
+
+.role-success h1 {
+    margin-bottom: 0;
+}
+
+.role-success img {
+    width: 100px;
+    margin-right: 20px;
+}
+
+.warning {
+    width: 400px;
+    background-color: rgb(255, 200, 200);
+    padding: 10px;
+    text-align: left;
+    margin-bottom: 10px;
+    color: rgb(164, 0, 0);
+    border-radius: 5px;
+}
+
 @media only screen and (max-width: 600px) {
     main h1 {
         font-size: 23px;
@@ -139,54 +194,26 @@ form input[type='submit'] {
     .otp-form input[type='submit'] {
         width: 300px;
     }
-}
 
-.d-flex {
-    display: flex;
-}
+    .role-success .success {
+        flex-direction: column-reverse;
+        align-items: center;
+    }
 
-.row {
-    flex-direction: row;
-}
+    .role-success .success .image-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 0;
+        margin-top: 10px;
+    }
 
-.col {
-    flex-direction: column;
-}
+    .role-success {
+        width: 300px;
+    }
 
-.j-c {
-    justify-content: center;
-}
-
-.a-c {
-    align-items: center;
-}
-
-.role-success {
-    align-items: center;
-    justify-content: center;
-}
-
-.role-success .success {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.role-success h1 {
-    margin-bottom: 0;
-}
-
-.role-success img {
-    width: 100px;
-    margin-right: 20px;
-}
-
-.warning {
-    width: 400px;
-    background-color: rgb(255, 200, 200);
-    padding: 10px;
-    text-align: left;
-    margin-bottom: 10px;
-    color: rgb(164, 0, 0);
-    border-radius: 5px;
+    .role-success .success div img {
+        width: 50px;
+        height: 50px;
+    }
 }
