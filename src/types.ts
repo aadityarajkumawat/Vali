@@ -8,6 +8,7 @@ export interface User {
     name: string
     OTP: string
     email: string
+    verified: boolean
 }
 
 export interface UserResponse {

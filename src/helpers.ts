@@ -83,9 +83,10 @@ export function OTPGenerator(): string {
 export function initializeUser(userId: string) {
     let user: User = {
         userId,
-        name: '<empty>',
-        OTP: 'xxxxxx',
-        email: '<empty>@blank.com',
+        name: '',
+        OTP: '',
+        email: '',
+        verified: false,
     }
     return user
 }

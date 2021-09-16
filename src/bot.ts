@@ -66,6 +66,18 @@ client.on('guildMemberAdd', function (member) {
     })()
 })
 
+client.on('guildMemberRemove', (member) => {
+    ;(async () => {
+        let userLeft = member.user
+        let userId = null
+
+        if (userLeft) {
+            userId = userLeft.id
+            await redis.del(encodeUserId(userId))
+        }
+    })()
+})
+
 app.get('/', function (_, res) {
     res.render('pages/notfound', {})
 })
@@ -81,7 +93,12 @@ app.get('/verify/:userId/:error?', function (req, res) {
         let { userId, error } = req.params
         let redirectTo = `/auth/${userId}`
 
-        let { found: userExists } = await findUser(userId)
+        let { found: userExists, user } = await findUser(userId)
+
+        if ((user as User).verified) {
+            res.render('pages/success')
+            return
+        }
 
         if (userExists && !error) {
             res.render('pages/index', {
@@ -154,7 +171,12 @@ app.get('/complete/:id', function (req, res) {
     ;(async function () {
         let userId = req.params.id
 
-        let { found: userExists } = await findUser(userId)
+        let { found: userExists, user } = await findUser(userId)
+
+        if ((user as User).verified) {
+            res.render('pages/success')
+            return
+        }
 
         if (userExists) {
             res.render('pages/otp', { path: `/give-role/${userId}` })
@@ -170,6 +192,11 @@ app.post('/give-role/:id', function (req, res) {
 
         let { found: userExists, user } = await findUser(userId)
 
+        if ((user as User).verified) {
+            res.render('pages/success')
+            return
+        }
+
         let inputOTP = buildOTPString(req.body)
 
         // if the user is found and OTP matches, then we assign him/ her
@@ -177,6 +204,8 @@ app.post('/give-role/:id', function (req, res) {
         // about the updated changes.
         if (userExists && inputOTP === (user as User).OTP) {
             await assignRole(user as User, 'Holy Grail', 'Student')
+            user = { ...user, verified: true } as User
+            await redis.set(userId, JSON.stringify(user))
             res.render('pages/success')
         } else {
             res.render('pages/notfound')
