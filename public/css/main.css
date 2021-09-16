@@ -79,6 +79,26 @@ form input[type='submit'] {
     cursor: pointer;
 }
 
+.role-selector-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.role-selector-container label {
+    font-size: 18px;
+}
+
+#role-selector {
+    border: 1px solid rgb(187, 187, 187);
+    border-radius: 5px;
+    padding: 10px 15px;
+    width: 400px;
+    margin-bottom: 6px;
+    font-size: 19px;
+    background-color: white;
+}
+
 .otp-form {
     margin-top: 10px;
 }
@@ -168,6 +188,18 @@ form input[type='submit'] {
     form input {
         width: 300px;
         padding: 8px 10px;
+    }
+
+    form .role-selector-container {
+        width: 300px;
+    }
+
+    form .role-selector-container #role-selector {
+        width: 300px;
+    }
+
+    form .role-selector-container #role-selector option {
+        font-size: 16px;
     }
 
     .otp-container {

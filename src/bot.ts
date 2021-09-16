@@ -79,7 +79,8 @@ client.on('guildMemberRemove', (member) => {
 })
 
 app.get('/', function (_, res) {
-    res.render('pages/notfound', {})
+    // res.render('pages/notfound', {})
+    res.render('pages/index', indexPageParams)
 })
 
 app.get('/:anything', function (_, res) {
