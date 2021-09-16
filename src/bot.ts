@@ -95,6 +95,7 @@ app.get('/verify/:userId/:error?', function (req, res) {
 
         let { found: userExists, user } = await findUser(userId)
 
+        // in case the user is already verified, take him to success page
         if ((user as User).verified) {
             res.render('pages/success')
             return
@@ -204,6 +205,8 @@ app.post('/give-role/:id', function (req, res) {
         // about the updated changes.
         if (userExists && inputOTP === (user as User).OTP) {
             await assignRole(user as User, 'Holy Grail', 'Student')
+
+            // once the user is assigned his/ her role, save his status
             user = { ...user, verified: true } as User
             await redis.set(userId, JSON.stringify(user))
             res.render('pages/success')
